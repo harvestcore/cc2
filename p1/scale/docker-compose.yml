@@ -1,4 +1,11 @@
 version: '3'
+
+networks:
+  web:
+    external: true
+  internal:
+    external: false
+
 services:
   nextcloud:
     image: nextcloud:21.0.0-apache
@@ -12,6 +19,8 @@ services:
       - MYSQL_HOST=mariadb
       - NEXTCLOUD_ADMIN_USER=admin
       - NEXTCLOUD_ADMIN_PASSWORD=admin
+    labels:
+      traefik.frontend.rule: Host(`nextcloud.localhost`)
 
   mariadb:
     image: mariadb:10.4.8-bionic
@@ -24,21 +33,26 @@ services:
       - MYSQL_PASSWORD=admin
       - MYSQL_DATABASE=nextcloud
       - MYSQL_USER=nextcloud
+    labels:
+      traefik.enable: false
 
-  proxy:
-    image: traefik  
-    restart: always
+  traefik:
+    image: traefik:v2.3
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
+      - --log.level=INFO
+      - --api.insecure=true
+      - --entrypoints.web.address=:80
+      - --providers.docker
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    labels:
+      traefik.http.routers.dash.service: api@internal
+
     ports:
       - 80:80
-      - 443:443
       - 8080:8080
-    volumes:
-      - //var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   nextcloud:
