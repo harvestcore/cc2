@@ -1,10 +1,4 @@
-version: '3'
-
-networks:
-  web:
-    external: true
-  internal:
-    external: false
+version: '3.3'
 
 services:
   nextcloud:
@@ -20,7 +14,10 @@ services:
       - NEXTCLOUD_ADMIN_USER=admin
       - NEXTCLOUD_ADMIN_PASSWORD=admin
     labels:
-      traefik.frontend.rule: Host(`nextcloud.localhost`)
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.rule=Host(`localhost`)"
+      - "traefik.http.routers.nextcloud.entrypoints=web"
+      - "traefik.http.services.nextcloud.loadbalancer.sticky.cookie=true"
 
   mariadb:
     image: mariadb:10.4.8-bionic
@@ -34,25 +31,26 @@ services:
       - MYSQL_DATABASE=nextcloud
       - MYSQL_USER=nextcloud
     labels:
-      traefik.enable: false
+      - "traefik.enable=false"
 
   traefik:
-    image: traefik:v2.3
+    image: traefik:v2.4
+    container_name: "traefik"
     command:
-      - --log.level=INFO
-      - --api.insecure=true
-      - --entrypoints.web.address=:80
-      - --providers.docker
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
 
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
     labels:
-      traefik.http.routers.dash.service: api@internal
+      - "traefik.http.routers.dash.service=api@internal"
 
     ports:
-      - 80:80
-      - 8080:8080
+      - "80:80"
+      - "8080:8080"
 
 volumes:
   nextcloud:
