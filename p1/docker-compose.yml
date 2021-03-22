@@ -74,6 +74,17 @@ services:
       hcc:
         ipv4_address: 172.26.0.4
 
+  ldap:
+    image: larrycai/openldap
+    restart: always
+    ports:
+      - 389:389
+    volumes:
+      - ./more.ldif:/files/more.ldif
+    networks:
+      hcc:
+        ipv4_address: 172.26.0.5
+
 volumes:
   nextcloud:
   db:
