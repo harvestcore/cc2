@@ -1,0 +1,7 @@
+dn: cn=Angel,ou=Users,dc=openstack,dc=org
+objectClass: inetOrgPerson
+sn: Gomez
+cn: Angel
+uid: angelgm
+userpassword: angelgm
+ou: Users

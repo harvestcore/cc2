@@ -15,7 +15,7 @@ for i in $(seq 1 $NEXTCLOUD_INSTANCES)
 do
     for j in "${PLUGINS[@]}"
     do
-        disable_plugin $CONTAINER_ROOT$i"_1" $j
+        disable_plugin $CONTAINER_ROOT$i"_75570479" $j
         echo "--------------------------------------"
     done
 done
