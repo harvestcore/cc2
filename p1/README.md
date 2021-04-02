@@ -36,6 +36,32 @@ Los contenedores que se han desplegado son:
 - Usuario admin > U: admin, P: admin
 - Usuario LDAP > U: angelgm, P: angelgm
 
+## Ejecutar los scripts
+
+Se adjuntan dos scripts (tanto para *Bash* como para *Powershell*) para desactivar y activar los plugins necesarios. La manera de ejecutar estos scripts es la siguiente:
+
+En *Bash*:
+```bash
+#Sintaxis
+./disable-features.sh <raíz del nombre del contenedor> <número de instancias>
+./enable-features.sh <raíz del nombre del contenedor> <número de instancias>
+
+# Ejemplo
+./disable-features.sh servicio_nextcloud 3
+./enable-features.sh servicio_nextcloud 3
+```
+
+En *Powershell*:
+```powershell
+#Sintaxis
+.\disable-features.ps1 <raíz del nombre del contenedor> <número de instancias>
+.\enable-features.ps1 <raíz del nombre del contenedor> <número de instancias>
+
+# Ejemplo
+.\disable-features.ps1 p1_nextcloud0 3
+.\enable-features.ps1 p1_nextcloud0 3
+```
+
 ---
 
 ## Preguntas - Cuestionario
