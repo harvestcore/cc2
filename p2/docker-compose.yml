@@ -1,0 +1,7 @@
+version: '3'
+services:
+    apiv1:
+        container_name: api-v1
+        build: ./api/v1
+        ports:
+            - 5000:5000
