@@ -18,7 +18,7 @@ class Model:
             self.humidity_model = pickle.load(pkl)
 
     def predict(self, periods):
-        hours = pandas.date_range(datetime.now().replace(second=0, microsecond=0), periods=periods, freq='H')
+        hours = pandas.date_range(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0), periods=periods, freq='H')
         temperature = self.temperature_model.predict(n_periods=periods, return_conf_int=False).tolist()
         humidity = self.humidity_model.predict(n_periods=periods, return_conf_int=False).tolist()
 
@@ -26,7 +26,7 @@ class Model:
             'periods': periods,
             'prediction': [
                 {
-                    'hour': hour.strftime('%H:%M:%S'),
+                    'hour': hour.strftime('%Y-%m-%d %H:%M'),
                     'temp': temp,
                     'hum': hum
                 } for hour, temp, hum in zip(hours, temperature, humidity)
