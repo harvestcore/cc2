@@ -7,9 +7,10 @@ import pickle
 ###############
 
 temperatures = pd.read_csv('data/temperature.csv', names=['San Francisco'], header=0)
-temperatures = temperatures.fillna(temperatures.mean())
+temperatures.dropna(subset=['San Francisco'], inplace=True)
+temperatures.rename(columns={'San Francisco': 'temperature'}, inplace=True)
 
-temperature_model = pm.auto_arima(
+temperatures_model = pm.auto_arima(
     temperatures,
     start_p=1,
     start_q=1,
@@ -27,15 +28,16 @@ temperature_model = pm.auto_arima(
     stepwise=True
 )
 
-with open('data/temperature.pkl', 'wb') as pkl:
-    pickle.dump(temperature_model, pkl)
+with open('data/temperatures.pkl', 'wb') as pkl:
+    pickle.dump(temperatures_model, pkl)
 
 ############
 # Humidity #
 ############
 
 humidity = pd.read_csv('data/humidity.csv', names=['San Francisco'], header=0)
-humidity = humidity.fillna(humidity.mean())
+humidity.dropna(subset=['San Francisco'], inplace=True)
+humidity.rename(columns={'San Francisco': 'humidity'}, inplace=True)
 
 humidity_model = pm.auto_arima(
     humidity,
@@ -57,3 +59,7 @@ humidity_model = pm.auto_arima(
 
 with open('data/humidity.pkl', 'wb') as pkl:
     pickle.dump(humidity_model, pkl)
+
+############
+# Training #
+############
