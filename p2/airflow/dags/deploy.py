@@ -39,8 +39,8 @@ def generate_operators(dag, tasks):
 
         for operator in tasks:
             computed_operator, computed_id = compute_operator(dag, operator)
-            operators[computed_id] = computed_operator
             flow = flow >> computed_operator
+            operators[computed_id] = flow
         return flow, operators
     
 def generate_flows(dag, flows):
