@@ -21,7 +21,7 @@ def compute_operator(dag, operator):
     }
     params.update(operator['params'])
 
-    return operator['type'](**params)
+    return operator['type'](**params), operator['id']
 
 def generate_operators(dag, tasks):
     n_tasks = len(tasks)
@@ -35,10 +35,32 @@ def generate_operators(dag, tasks):
 
         # Remove first computed operator
         del tasks[0]
+        operators = {}
 
         for operator in tasks:
-            flow = flow >> compute_operator(dag, operator)
+            computed_operator, computed_id = compute_operator(dag, operator)
+            operators[computed_id] = computed_operator
+            flow = flow >> computed_operator
+        return flow, operators
+    
+def generate_flows(dag, flows):
+    n_flows = len(flows)
+    
+    if n_flows == 0:
+        return
+    elif n_flows == 1:
+        flow, operators = generate_operators(dag, flows[0])
         return flow
+    else:
+        operators = {}
+        
+        for flow in flows:
+            generated_flow, generated_operators = generate_operators(dag, flow)
+            operators.update(generate_operators)
+            
+            if 'depends_on' in flow:
+                operators[flow['depends_on']] >> generated_flow
+        
 
 ### Python operator callables
 
@@ -94,118 +116,165 @@ def save_data_to_mongo():
     client = pymongo.MongoClient(config['MONGO_URI'])
     db = client.data['san-francisco'].insert_many(sf.to_dict())
 
-
-TASKS = [
+FLOWS = [
     {
-        'id': 'check_python_dependencies',
-        'type': PythonOperator,
-        'params': {
-            'python_callable': check_python_dependencies
-        }
-    },
-    {
-        'id': 'check_ubuntu_dependencies',
-        'type': BashOperator,
-        'params': {
-            'bash_command': 'apt install unzip'
-        }
-    },
-    {
-        'id': 'create_root_folder',
-        'type': BashOperator,
-        'params': {
-            'bash_command': 'touch /p2'
-        }
-    },
-    {
-        'id': 'download_csv_data',
-        'type': BashOperator,
-        'params': {
-            'bash_command': '\
-                wget -p /p2/csv https://github.com/manuparra/MaterialCC2020/blob/master/humidity.csv.zip && \
-                wget -p /p2/csv https://github.com/manuparra/MaterialCC2020/blob/master/temperature.csv.zip'
-        }
-    },
-    {
-        'id': 'unzip_csv_data',
-        'type': BashOperator,
-        'params': {
-            'bash_command': '\
-                unzip /p2/csv/humidity.csv.zip && \
-                unzip /p2/csv/temperature.csv.zip && \
-                rm -rf *.zip'
-        }
-    },
-    {
-        'id': 'download_repo',
-        'type': BashOperator,
-        'params': {
-            'bash_command': '\
-                wget -p /p2 https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip && \
-                unzip /p2/develop.zip && \
-                mv cc2-develop/p2/api . && \
-                rm -rf *.zip'
-        }
-    },
-    {
-        'id': 'process_csv',
-        'type': PythonOperator,
-        'params': {
-            'python_callable': process_csv
-        }
-    },
-    {
-        'id': 'save_data_to_mongo',
-        'type': PythonOperator,
-        'params': {
-            'python_callable': save_data_to_mongo
-        }
-    },
-    {
-        'parallel': [
+        'flow_id': 'check_dependencies',
+        'tasks': [
             {
-                'id': 'test_api_v1',
-                'type': BashOperator,
+                'id': 'check_python_dependencies',
+                'type': PythonOperator,
                 'params': {
-                    'bash_command': '\
-                        cd /p2/api/v1 && \
-                        python -m pip install -r requirements.txt && \
-                        python -m pytest'
+                    'python_callable': check_python_dependencies
                 }
             },
             {
-                'id': 'test_api_v2',
+                'id': 'check_ubuntu_dependencies',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': '\
-                        cd /p2/api/v2 && \
-                        python -m pip install -r requirements.txt && \
-                        python -m pytest'
+                    'bash_command': 'apt install unzip'
+                }
+            },
+            {
+                'id': 'create_root_folder',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'touch /p2'
                 }
             }
         ]
     },
     {
-        'id': 'echo_check',
-        'type': BashOperator,
-        'params': {
-            'bash_command': 'echo "Still alive"'
-        }
-    },
-    {
-        'parallel': [
+        'flow_id': 'download_data',
+        'depends_on': 'create_root_folder',
+        'tasks': [
             {
-                'id': 'deploy_api_v1',
+                'id': 'download_csv_data',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': 'echo "TODO"'
+                    'bash_command': '\
+                        wget -p /p2/csv https://github.com/manuparra/MaterialCC2020/blob/master/humidity.csv.zip && \
+                        wget -p /p2/csv https://github.com/manuparra/MaterialCC2020/blob/master/temperature.csv.zip'
                 }
             },
             {
-                'id': 'deploy_api_v2',
+                'id': 'unzip_csv_data',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': 'echo "TODO"'
+                    'bash_command': '\
+                        unzip /p2/csv/humidity.csv.zip && \
+                        unzip /p2/csv/temperature.csv.zip && \
+                        rm -rf *.zip'
+                }
+            },
+            {
+                'id': 'download_repo',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': '\
+                        wget -p /p2 https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip && \
+                        unzip /p2/develop.zip && \
+                        mv cc2-develop/p2/api . && \
+                        rm -rf *.zip'
+                }
+            }
+        ]
+    },
+    {
+        'flow_id': 'process_data',
+        'depends_on': 'download_repo',
+        'tasks': [
+            {
+                'id': 'process_csv',
+                'type': PythonOperator,
+                'params': {
+                    'python_callable': process_csv
+                }
+            },
+            {
+                'id': 'save_data_to_mongo',
+                'type': PythonOperator,
+                'params': {
+                    'python_callable': save_data_to_mongo
+                }
+            }
+        ]
+    },
+    {
+        'flow_id': 'test_api',
+        'depends_on': 'save_data_to_mongo',
+        'tasks': [
+            {
+                'id': 'parallel_test_api',
+                'parallel': [
+                    {
+                        'id': 'test_api_v1',
+                        'type': BashOperator,
+                        'params': {
+                            'bash_command': '\
+                                cd /p2/api/v1 && \
+                                python -m pip install -r requirements.txt && \
+                                python -m pytest'
+                        }
+                    },
+                    {
+                        'id': 'test_api_v2',
+                        'type': BashOperator,
+                        'params': {
+                            'bash_command': '\
+                                cd /p2/api/v2 && \
+                                python -m pip install -r requirements.txt && \
+                                python -m pytest'
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        'flow_id': 'deploy_api_v1',
+        'depends_on': 'test_api_v1',
+        'tasks': [
+            {
+                'id': 'train_api_v1_data',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': '\
+                        cd /p2/api/v1 && \
+                        python train.py'
+                }
+            },
+            {
+                'id': 'build_image_api_v1',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'docker-compose build'
+                }
+            },
+            {
+                'id': 'run_image_api_v1',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'docker-compose up -d'
+                }
+            }
+        ]
+    },
+    {
+        'flow_id': 'deploy_api_v2',
+        'depends_on': 'test_api_v2',
+        'tasks': [
+            {
+                'id': 'build_image_api_v2',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'docker-compose build'
+                }
+            },
+            {
+                'id': 'run_image_api_v2',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'docker-compose up -d'
                 }
             }
         ]
@@ -228,4 +297,4 @@ dag = DAG(
     schedule_interval = timedelta(days=1),
 )
 
-generate_operators(dag, TASKS)
+generate_operators(dag, FLOWS)
