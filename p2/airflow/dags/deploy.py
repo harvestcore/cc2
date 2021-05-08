@@ -297,4 +297,4 @@ dag = DAG(
     schedule_interval = timedelta(days=1),
 )
 
-generate_operators(dag, FLOWS)
+generate_flows(dag, FLOWS)
