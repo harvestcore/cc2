@@ -60,6 +60,8 @@ def generate_flows(dag, flows):
             
             if 'depends_on' in flow:
                 operators[flow['depends_on']] >> generated_flow
+                
+            # TODO: return operators??
         
 
 ### Python operator callables
