@@ -189,23 +189,12 @@ def process_csv():
     })
 
     frame.to_csv(
-        '/p2/csv/data/san_francisco.csv',
+        '/p2/mongo/sanfrancisco.csv',
         sep=',',
         encoding='utf-8',
         index=False
     )
 
-def save_data_to_mongo():
-    import pandas as pd
-    import pymongo
-
-    sf = pd.read_csv(
-        '/p2/csv/data/san_francisco.csv',
-        header=0
-    )
-
-    client = pymongo.MongoClient('mongodb+srv://admin:dITtIb4o1LHflwKm@data.fgyev.mongodb.net/p2?retryWrites=true&w=majority')
-    db = client.data['san-francisco'].insert_many(sf.to_dict())
 
 FLOWS = [
     {
@@ -265,7 +254,8 @@ FLOWS = [
                         wget -p /p2 https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip && \
                         unzip /p2/develop.zip && \
                         mv cc2-develop/p2/api . && \
-                        rm -rf *.zip'
+                        rm -rf *.zip && \
+                        mv cc2-develop/p2/mongo .'
                 }
             }
         ]
@@ -282,17 +272,26 @@ FLOWS = [
                 }
             },
             {
-                'id': 'save_data_to_mongo',
-                'type': PythonOperator,
+                'id': 'build_mongo_database',
+                'type': BashOperator,
                 'params': {
-                    'python_callable': save_data_to_mongo
+                    'bash_command': '\
+                        cd /p2/mongo && \
+                        docker-compose build'
+                }
+            },
+            {
+                'id': 'run_mongo_database',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'docker-compose up -d'
                 }
             }
         ]
     },
     {
         'flow_id': 'test_api',
-        'depends_on': 'save_data_to_mongo',
+        'depends_on': 'run_mongo_database',
         'tasks': [
             {
                 'id': 'parallel_test_api',
