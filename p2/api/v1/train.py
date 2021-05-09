@@ -59,7 +59,3 @@ humidity_model = pm.auto_arima(
 
 with open('data/humidity.pkl', 'wb') as pkl:
     pickle.dump(humidity_model, pkl)
-
-############
-# Training #
-############

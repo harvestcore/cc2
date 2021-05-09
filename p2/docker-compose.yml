@@ -4,9 +4,9 @@ services:
         container_name: api-v1
         build: ./api/v1
         ports:
-            - 5000:5000
+            - 7070:7070
     apiv2:
         container_name: api-v2
         build: ./api/v2
         ports:
-            - 5001:5001
+            - 7080:7080

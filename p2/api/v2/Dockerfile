@@ -6,4 +6,4 @@ COPY . .
 
 RUN pip3 install -r requirements.txt --no-cache-dir
 
-CMD ["gunicorn", "-b", "0.0.0.0:5001", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:7080", "app:app"]

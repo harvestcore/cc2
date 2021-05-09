@@ -1,0 +1,7 @@
+version: '3'
+services:
+    apiv1:
+        container_name: api-v1
+        build: .
+        ports:
+            - 7070:7070

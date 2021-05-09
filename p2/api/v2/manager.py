@@ -1,7 +1,4 @@
-from dotenv import dotenv_values
 import requests
-
-ENV_PATH = '.env'
 
 def get_url(period, key):
     return 'https://api.weatherapi.com/v1/forecast.json?key=%s&q=San Francisco&days=%i&aqi=no&alerts=no' % (key, period)
@@ -15,8 +12,7 @@ class Manager:
         return cls.manager
 
     def __init__(self):
-        config = dotenv_values(ENV_PATH)
-        self.api_key = config['API_KEY']
+        self.api_key = '892f0fb018714b9fba5204344210505'
 
     def __perform_request_and_get_forecast(self, period):
         url = get_url(period, self.api_key)
