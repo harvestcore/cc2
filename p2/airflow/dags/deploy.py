@@ -158,7 +158,7 @@ def generate_airflows(dag, flows):
 def check_python_dependencies():
     import subprocess
     import sys
-    dependencies = ['pandas', 'pytest', 'pymongo', 'urllib']
+    dependencies = ['pandas', 'pytest', 'pymongo', 'zipfile', 'urllib']
 
     for dep in dependencies:
         try:
@@ -173,12 +173,12 @@ def process_csv():
     import pandas as pd
 
     temperature = pd.read_csv(
-        '/p2/csv/data/temperature.csv',
+        '/tmp/p2/csv/temperature.csv',
         header=0
     )
     
     humidity = pd.read_csv(
-        '/p2/csv/data/humidity.csv',
+        '/tmp/p2/csv/humidity.csv',
         header=0
     )
 
@@ -189,12 +189,26 @@ def process_csv():
     })
 
     frame.to_csv(
-        '/p2/mongo/sanfrancisco.csv',
+        '/tmp/p2/mongo/sanfrancisco.csv',
         sep=',',
         encoding='utf-8',
         index=False
     )
 
+def extract_data():
+    import zipfile
+    
+    with zipfile.ZipFile('/tmp/p2/csv/humidity.csv.zip', 'r') as humidity_zip:
+        humidity_zip.extractall('/tmp/p2/csv/')
+
+    with zipfile.ZipFile('/tmp/p2/csv/temperature.csv.zip', 'r') as temperature_zip:
+        temperature_zip.extractall('/tmp/p2/csv/')
+
+def extract_repo():
+    import zipfile
+    
+    with zipfile.ZipFile('/tmp/p2/cc2.zip', 'r') as repo:
+        repo.extractall('/tmp/p2/')
 
 FLOWS = [
     {
@@ -208,17 +222,12 @@ FLOWS = [
                 }
             },
             {
-                'id': 'check_ubuntu_dependencies',
-                'type': BashOperator,
-                'params': {
-                    'bash_command': 'apt install unzip'
-                }
-            },
-            {
                 'id': 'create_root_folder',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': 'touch /p2'
+                    'bash_command': '\
+                        mkdir /tmp/p2 && \
+                        mkdir /tmp/p2/csv'
                 }
             }
         ]
@@ -232,18 +241,25 @@ FLOWS = [
                 'type': BashOperator,
                 'params': {
                     'bash_command': '\
-                        wget -p /p2/csv https://github.com/manuparra/MaterialCC2020/blob/master/humidity.csv.zip && \
-                        wget -p /p2/csv https://github.com/manuparra/MaterialCC2020/blob/master/temperature.csv.zip'
+                        cd /tmp/p2/csv && \
+                        curl -o /tmp/p2/csv/humidity.csv.zip https://raw.githubusercontent.com/manuparra/MaterialCC2020/master/humidity.csv.zip && \
+                        curl -o /tmp/p2/csv/temperature.csv.zip https://raw.githubusercontent.com/manuparra/MaterialCC2020/master/temperature.csv.zip'
+                }
+            },
+            {
+                'id': 'show_folder',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': '\
+                        cd /tmp/p2/csv && \
+                        ls -lah'
                 }
             },
             {
                 'id': 'unzip_csv_data',
-                'type': BashOperator,
+                'type': PythonOperator,
                 'params': {
-                    'bash_command': '\
-                        unzip /p2/csv/humidity.csv.zip && \
-                        unzip /p2/csv/temperature.csv.zip && \
-                        rm -rf *.zip'
+                    'python_callable': extract_data
                 }
             },
             {
@@ -251,10 +267,25 @@ FLOWS = [
                 'type': BashOperator,
                 'params': {
                     'bash_command': '\
-                        wget -p /p2 https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip && \
-                        unzip /p2/develop.zip && \
+                        cd /tmp/p2 && \
+                        curl -o /tmp/p2/cc2.zip -LJ https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip'
+                }
+            },
+            {
+                'id': 'extract_repo',
+                'type': PythonOperator,
+                'params': {
+                    'python_callable': extract_repo
+                }
+            },
+            {
+                'id': 'extract_apis',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': '\
+                        cd /tmp/p2 && \
+                        ls -lah && \
                         mv cc2-develop/p2/api . && \
-                        rm -rf *.zip && \
                         mv cc2-develop/p2/mongo .'
                 }
             }
@@ -262,7 +293,7 @@ FLOWS = [
     },
     {
         'flow_id': 'process_data',
-        'depends_on': 'download_repo',
+        'depends_on': 'extract_apis',
         'tasks': [
             {
                 'id': 'process_csv',
@@ -276,7 +307,7 @@ FLOWS = [
                 'type': BashOperator,
                 'params': {
                     'bash_command': '\
-                        cd /p2/mongo && \
+                        cd /tmp/p2/mongo && \
                         docker-compose build'
                 }
             },
@@ -301,9 +332,9 @@ FLOWS = [
                         'type': BashOperator,
                         'params': {
                             'bash_command': '\
-                                cd /p2/api/v1 && \
-                                python -m pip install -r requirements.txt && \
-                                python -m pytest'
+                                cd /tmp/p2/api/v1 && \
+                                python3 -m pip install -r requirements.txt && \
+                                python3 -m pytest'
                         }
                     },
                     {
@@ -311,9 +342,9 @@ FLOWS = [
                         'type': BashOperator,
                         'params': {
                             'bash_command': '\
-                                cd /p2/api/v2 && \
-                                python -m pip install -r requirements.txt && \
-                                python -m pytest'
+                                cd /tmp/p2/api/v2 && \
+                                python3 -m pip install -r requirements.txt && \
+                                python3 -m pytest'
                         }
                     }
                 ]
@@ -328,9 +359,7 @@ FLOWS = [
                 'id': 'train_api_v1_data',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': '\
-                        cd /p2/api/v1 && \
-                        python train.py'
+                    'bash_command': 'python3 train.py'
                 }
             },
             {
