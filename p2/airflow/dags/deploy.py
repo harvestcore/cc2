@@ -301,7 +301,7 @@ FLOWS = [
         'depends_on': 'run_mongo_database',
         'tasks': [
             {
-                'id': 'parallel_test_api',
+                'id': 'parallel_branch_api',
                 'parallel': [
                     {
                         'id': 'train_api_v1_data',
