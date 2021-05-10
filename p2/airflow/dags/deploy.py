@@ -257,16 +257,7 @@ FLOWS = [
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2 && \
-                        wget https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip'
-                }
-            },
-            {
-                'id': 'extract_repo',
-                'type': BashOperator,
-                'params': {
-                    'bash_command': '\
-                        cd /tmp/p2 && \
-                        unzip -f cc2.zip'
+                        git clone https://github.com/harvestcore/cc2'
                 }
             },
             {
@@ -276,8 +267,8 @@ FLOWS = [
                     'bash_command': '\
                         cd /tmp/p2 && \
                         ls -lah && \
-                        mv cc2-develop/p2/api . && \
-                        mv cc2-develop/p2/mongo .'
+                        mv cc2/p2/api . && \
+                        mv cc2/p2/mongo .'
                 }
             }
         ]
