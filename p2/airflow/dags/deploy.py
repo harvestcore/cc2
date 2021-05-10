@@ -311,8 +311,7 @@ FLOWS = [
                                 cd /tmp/p2/api/v1 && \
                                 if test -f "/data/humidity.pkl"; then cp /data/humidity.pkl ./data; fi && \
                                 if test -f "/data/temperatures.pkl"; then cp /data/temperatures.pkl ./data; else \
-                                    pip3 install -r requirements.txt && python3 train.py; fi && \
-                                cp *.pkl /data'
+                                    pip3 install -r requirements.txt && python3 train.py && cp *.pkl /data; fi'
                         }
                     },
                     {
