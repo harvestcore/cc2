@@ -212,6 +212,7 @@ FLOWS = [
                 'type': BashOperator,
                 'params': {
                     'bash_command': '\
+                        rm -rf /tmp/p2/* && \
                         mkdir -p /tmp/p2 && \
                         mkdir -p /tmp/p2/csv'
                 }
