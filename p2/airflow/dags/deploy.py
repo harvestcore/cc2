@@ -248,8 +248,8 @@ FLOWS = [
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2/csv && \
-                        unzip -f humidity.csv.zip && \
-                        unzip -f temperature.csv.zip'
+                        unzip -u humidity.csv.zip && \
+                        unzip -u temperature.csv.zip'
                 }
             },
             {
