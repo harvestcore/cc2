@@ -1,7 +1,7 @@
 import unittest
 import json
 
-from app import app
+from .app import app
 
 PATH = '/servicio/v2/prediccion/'
 

@@ -4,3 +4,5 @@ gunicorn==20.0.4
 pmdarima==1.8.2
 pytest==3.8.0
 Werkzeug==0.16.1
+py==1.7.0
+pluggy==0.8.0

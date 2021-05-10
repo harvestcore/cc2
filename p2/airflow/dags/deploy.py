@@ -158,7 +158,7 @@ def generate_airflows(dag, flows):
 def check_python_dependencies():
     import subprocess
     import sys
-    dependencies = ['pandas', 'pytest', 'pymongo', 'zipfile', 'urllib']
+    dependencies = ['pandas', 'pymongo', 'urllib']
 
     for dep in dependencies:
         try:
@@ -195,20 +195,6 @@ def process_csv():
         index=False
     )
 
-def extract_data():
-    import zipfile
-    
-    with zipfile.ZipFile('/tmp/p2/csv/humidity.csv.zip', 'r') as humidity_zip:
-        humidity_zip.extractall('/tmp/p2/csv/')
-
-    with zipfile.ZipFile('/tmp/p2/csv/temperature.csv.zip', 'r') as temperature_zip:
-        temperature_zip.extractall('/tmp/p2/csv/')
-
-def extract_repo():
-    import zipfile
-    
-    with zipfile.ZipFile('/tmp/p2/cc2.zip', 'r') as repo:
-        repo.extractall('/tmp/p2/')
 
 FLOWS = [
     {
@@ -242,8 +228,8 @@ FLOWS = [
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2/csv && \
-                        curl -o /tmp/p2/csv/humidity.csv.zip https://raw.githubusercontent.com/manuparra/MaterialCC2020/master/humidity.csv.zip && \
-                        curl -o /tmp/p2/csv/temperature.csv.zip https://raw.githubusercontent.com/manuparra/MaterialCC2020/master/temperature.csv.zip'
+                        wget https://raw.githubusercontent.com/manuparra/MaterialCC2020/master/humidity.csv.zip && \
+                        wget https://raw.githubusercontent.com/manuparra/MaterialCC2020/master/temperature.csv.zip'
                 }
             },
             {
@@ -257,9 +243,12 @@ FLOWS = [
             },
             {
                 'id': 'unzip_csv_data',
-                'type': PythonOperator,
+                'type': BashOperator,
                 'params': {
-                    'python_callable': extract_data
+                    'bash_command': '\
+                        cd /tmp/p2/csv && \
+                        unzip humidity.csv.zip && \
+                        unzip temperature.csv.zip'
                 }
             },
             {
@@ -268,14 +257,16 @@ FLOWS = [
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2 && \
-                        curl -o /tmp/p2/cc2.zip -LJ https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip'
+                        wget https://github.com/harvestcore/cc2/archive/refs/heads/develop.zip'
                 }
             },
             {
                 'id': 'extract_repo',
-                'type': PythonOperator,
+                'type': BashOperator,
                 'params': {
-                    'python_callable': extract_repo
+                    'bash_command': '\
+                        cd /tmp/p2 && \
+                        unzip cc2.zip'
                 }
             },
             {
@@ -328,23 +319,21 @@ FLOWS = [
                 'id': 'parallel_test_api',
                 'parallel': [
                     {
-                        'id': 'test_api_v1',
+                        'id': 'build_test_api_v1',
                         'type': BashOperator,
                         'params': {
                             'bash_command': '\
                                 cd /tmp/p2/api/v1 && \
-                                python3 -m pip install -r requirements.txt && \
-                                python3 -m pytest'
+                                docker build . -f Dockerfile.test -t test-api-v1:latest'
                         }
                     },
                     {
-                        'id': 'test_api_v2',
+                        'id': 'build_test_api_v2',
                         'type': BashOperator,
                         'params': {
                             'bash_command': '\
                                 cd /tmp/p2/api/v2 && \
-                                python3 -m pip install -r requirements.txt && \
-                                python3 -m pytest'
+                                docker build . -f Dockerfile.test -t test-api-v2:latest'
                         }
                     }
                 ]
@@ -352,9 +341,16 @@ FLOWS = [
         ]
     },
     {
-        'flow_id': 'deploy_api_v1',
-        'depends_on': 'test_api_v1',
+        'flow_id': 'test_and_deploy_api_v1',
+        'depends_on': 'build_test_api_v1',
         'tasks': [
+            {
+                'id': 'test_api_v1',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'docker run test-api-v1:latest'
+                }
+            },
             {
                 'id': 'train_api_v1_data',
                 'type': BashOperator,
@@ -379,9 +375,16 @@ FLOWS = [
         ]
     },
     {
-        'flow_id': 'deploy_api_v2',
-        'depends_on': 'test_api_v2',
+        'flow_id': 'test_and_deploy_api_v2',
+        'depends_on': 'build_test_api_v2',
         'tasks': [
+            {
+                'id': 'test_api_v2',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': 'docker run test-api-v2:latest'
+                }
+            },
             {
                 'id': 'build_image_api_v2',
                 'type': BashOperator,
