@@ -304,12 +304,10 @@ FLOWS = [
                 'id': 'parallel_test_api',
                 'parallel': [
                     {
-                        'id': 'build_test_api_v1',
+                        'id': 'train_api_v1_data',
                         'type': BashOperator,
                         'params': {
-                            'bash_command': '\
-                                cd /tmp/p2/api/v1 && \
-                                docker build . -f Dockerfile.test -t test-api-v1:latest'
+                            'bash_command': 'python3 train.py'
                         }
                     },
                     {
@@ -330,17 +328,19 @@ FLOWS = [
         'depends_on': 'build_test_api_v1',
         'tasks': [
             {
+                'id': 'build_test_api_v1',
+                'type': BashOperator,
+                'params': {
+                    'bash_command': '\
+                        cd /tmp/p2/api/v1 && \
+                        docker build . -f Dockerfile.test -t test-api-v1:latest'
+                }
+            },
+            {
                 'id': 'test_api_v1',
                 'type': BashOperator,
                 'params': {
                     'bash_command': 'docker run test-api-v1:latest'
-                }
-            },
-            {
-                'id': 'train_api_v1_data',
-                'type': BashOperator,
-                'params': {
-                    'bash_command': 'python3 train.py'
                 }
             },
             {
