@@ -212,8 +212,8 @@ FLOWS = [
                 'type': BashOperator,
                 'params': {
                     'bash_command': '\
-                        mkdir /tmp/p2 && \
-                        mkdir /tmp/p2/csv'
+                        mkdir -p /tmp/p2 && \
+                        mkdir -p /tmp/p2/csv'
                 }
             }
         ]
