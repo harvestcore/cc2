@@ -309,8 +309,10 @@ FLOWS = [
                         'params': {
                             'bash_command': '\
                                 cd /tmp/p2/api/v1 && \
-                                pip3 install -r requirements.txt && \
-                                python3 train.py'
+                                if test -f "/data/humidity.pkl"; then cp /data/humidity.pkl ./data; fi && \
+                                if test -f "/data/temperatures.pkl"; then cp /data/temperatures.pkl ./data; else \
+                                    pip3 install -r requirements.txt && python3 train.py; fi && \
+                                cp *.pkl /data'
                         }
                     },
                     {
