@@ -291,6 +291,7 @@ FLOWS = [
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2/mongo && \
+                        docker-compose down && \
                         docker-compose up -d'
                 }
             }
@@ -386,6 +387,7 @@ FLOWS = [
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2/api/v2 && \
+                        docker-compose down && \
                         docker-compose build'
                 }
             },
