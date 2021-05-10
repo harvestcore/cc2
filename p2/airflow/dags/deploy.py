@@ -307,7 +307,9 @@ FLOWS = [
                         'id': 'train_api_v1_data',
                         'type': BashOperator,
                         'params': {
-                            'bash_command': 'python3 train.py'
+                            'bash_command': '\
+                                cd /tmp/p2/api/v2 && \
+                                python3 train.py'
                         }
                     },
                     {
@@ -347,14 +349,18 @@ FLOWS = [
                 'id': 'build_image_api_v1',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': 'docker-compose build'
+                    'bash_command': '\
+                        cd /tmp/p2/api/v1 && \
+                        docker-compose build'
                 }
             },
             {
                 'id': 'run_image_api_v1',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': 'docker-compose up -d'
+                    'bash_command': '\
+                        cd /tmp/p2/api/v1 && \
+                        docker-compose up -d'
                 }
             }
         ]
@@ -374,14 +380,18 @@ FLOWS = [
                 'id': 'build_image_api_v2',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': 'docker-compose build'
+                    'bash_command': '\
+                        cd /tmp/p2/api/v2 && \
+                        docker-compose build'
                 }
             },
             {
                 'id': 'run_image_api_v2',
                 'type': BashOperator,
                 'params': {
-                    'bash_command': 'docker-compose up -d'
+                    'bash_command': '\
+                        cd /tmp/p2/api/v2 && \
+                        docker-compose up -d'
                 }
             }
         ]
