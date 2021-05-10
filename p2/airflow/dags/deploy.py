@@ -325,7 +325,7 @@ FLOWS = [
     },
     {
         'flow_id': 'test_and_deploy_api_v1',
-        'depends_on': 'build_test_api_v1',
+        'depends_on': 'train_api_v1_data',
         'tasks': [
             {
                 'id': 'build_test_api_v1',
