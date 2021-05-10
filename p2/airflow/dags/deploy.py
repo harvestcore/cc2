@@ -308,7 +308,7 @@ FLOWS = [
                         'type': BashOperator,
                         'params': {
                             'bash_command': '\
-                                cd /tmp/p2/api/v2 && \
+                                cd /tmp/p2/api/v1 && \
                                 python3 train.py'
                         }
                     },
@@ -318,6 +318,7 @@ FLOWS = [
                         'params': {
                             'bash_command': '\
                                 cd /tmp/p2/api/v2 && \
+                                docker-compose down && \
                                 docker build . -f Dockerfile.test -t test-api-v2:latest'
                         }
                     }
@@ -351,6 +352,7 @@ FLOWS = [
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2/api/v1 && \
+                        docker-compose down && \
                         docker-compose build'
                 }
             },
