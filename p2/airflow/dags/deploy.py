@@ -309,6 +309,7 @@ FLOWS = [
                         'params': {
                             'bash_command': '\
                                 cd /tmp/p2/api/v1 && \
+                                pip3 install -r requirements.txt && \
                                 python3 train.py'
                         }
                     },
