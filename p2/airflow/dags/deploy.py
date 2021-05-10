@@ -286,19 +286,12 @@ FLOWS = [
                 }
             },
             {
-                'id': 'build_mongo_database',
+                'id': 'run_mongo_database',
                 'type': BashOperator,
                 'params': {
                     'bash_command': '\
                         cd /tmp/p2/mongo && \
-                        docker-compose build'
-                }
-            },
-            {
-                'id': 'run_mongo_database',
-                'type': BashOperator,
-                'params': {
-                    'bash_command': 'docker-compose up -d'
+                        docker-compose up -d'
                 }
             }
         ]
